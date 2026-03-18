@@ -119,7 +119,8 @@ public class RollingTab {
                 line.add(null);
             }
 
-            line.set(col, e);
+            line.set(col, e.copy());
+
             col++;
 
             if (col >= width) {
@@ -140,7 +141,7 @@ public class RollingTab {
         List<Element> line = new ArrayList<>();
 
         for (int i = x; i < width; i++) {
-            line.add(new Element(e.character, e.foregroundColour, e.backgroundColour, e.flags));
+            line.add(e.copy());
         }
 
         lines[(y + startLine) % height] = line;
@@ -164,10 +165,11 @@ public class RollingTab {
                 line.add(null);
             }
 
-            line.add(col, e);
+            line.add(col, e.copy());
 
             if (line.size() > width) {
                 Element overflow = line.remove(width);
+
                 row++;
                 col = 0;
 
@@ -177,7 +179,9 @@ public class RollingTab {
                 }
 
                 int nextIdx = (row + startLine) % height;
-                lines[nextIdx].add(0, overflow);
+
+                lines[nextIdx].add(0, overflow.copy());
+
                 continue;
             }
 
