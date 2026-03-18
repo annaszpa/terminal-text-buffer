@@ -2,10 +2,13 @@ package terminalbuffer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import element.Color;
+import element.Style;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -221,34 +224,44 @@ public class TerminalBufferTest {
         Element e = new Element('A');
 
         assertEquals('A', e.character);
-        assertEquals(0, e.foregroundColour);
-        assertEquals(0, e.backgroundColour);
-        assertEquals(0, e.flags);
+        assertEquals(Color.DEFAULT, e.foreground);
+        assertEquals(Color.DEFAULT, e.background);
+        assertTrue(e.styles.isEmpty());
     }
     @Test
     public void testElementFullConstructor() {
-        Element e = new Element('X', 1, 2, 3);
+        Element e = new Element(
+                'X',
+                Color.RED,
+                Color.BLUE,
+                EnumSet.of(Style.BOLD)
+        );
 
         assertEquals('X', e.character);
-        assertEquals(1, e.foregroundColour);
-        assertEquals(2, e.backgroundColour);
-        assertEquals(3, e.flags);
+        assertEquals(Color.RED, e.foreground);
+        assertEquals(Color.BLUE, e.background);
+        assertTrue(e.styles.contains(Style.BOLD));
     }
 
     @Test
     public void testWritePreservesElementProperties() {
         TerminalBuffer tb = new TerminalBuffer(10, 2, 2);
 
-        Element e = new Element('A', 5, 6, 7);
+        Element e = new Element(
+                'A',
+                Color.GREEN,
+                Color.BLACK,
+                EnumSet.of(Style.UNDERLINE)
+        );
 
         tb.write(Arrays.asList(e));
 
         Element stored = tb.currentTab.getElement(0, 0);
 
         assertEquals('A', stored.character);
-        assertEquals(5, stored.foregroundColour);
-        assertEquals(6, stored.backgroundColour);
-        assertEquals(7, stored.flags);
+        assertEquals(Color.GREEN, stored.foreground);
+        assertEquals(Color.BLACK, stored.background);
+        assertTrue(stored.styles.contains(Style.UNDERLINE));
     }
 
     @Test
