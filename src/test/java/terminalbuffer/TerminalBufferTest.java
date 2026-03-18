@@ -16,7 +16,7 @@ public class TerminalBufferTest {
 
     @BeforeEach
     public void setup() {
-        tb = new TerminalBuffer(10, 5);
+        tb = new TerminalBuffer(10, 5, 5);
     }
 
     @Test
@@ -129,4 +129,75 @@ public class TerminalBufferTest {
         assertEquals("LINE2", screen.get(1).trim());
     }
 
+    @Test
+    public void testSingleLineGoesToArchive() {
+        tb.write("LINE1");
+        tb.insertEmptyLine();
+        tb.insertEmptyLine();
+        tb.insertEmptyLine();
+        tb.insertEmptyLine();
+        tb.insertEmptyLine();
+
+        List<String> all = tb.getEntireScreen();
+
+        assertTrue(all.get(0).contains("LINE1"));
+    }
+
+    @Test
+    public void testMultipleLinesGoToArchive() {
+        for (int i = 0; i < 5; i++) {
+            tb.write("L" + i);
+            tb.insertEmptyLine();
+        }
+
+        List<String> all = tb.getEntireScreen();
+
+        assertTrue(all.get(0).contains("L0"));
+        assertTrue(all.get(0).contains("L1"));
+    }
+
+    @Test
+    public void testArchiveOrder() {
+        for (int i = 0; i < 7; i++) {
+            tb.write("LINE" + i);
+        }
+
+        List<String> all = tb.getEntireScreen();
+        assertTrue(all.get(0).contains("LINE0"));
+        assertTrue(all.get(0).contains("LINE1"));
+    }
+
+    @Test
+    public void testArchiveLimit() {
+        tb = new TerminalBuffer(10, 3, 3);
+
+        for (int i = 0; i < 10; i++) {
+            tb.write("L" + i);
+            tb.insertEmptyLine();
+        }
+
+        List<String> all = tb.getEntireScreen();
+
+        assertFalse(all.get(0).contains("L0"));
+    }
+
+    @Test
+    public void testScreenAndArchiveTogether() {
+        for (int i = 0; i < 10; i++) {
+            tb.write("LINE" + i);
+            tb.insertEmptyLine();
+        }
+
+        List<String> all = tb.getEntireScreen();
+
+        assertTrue(all.size() > 5);
+    }
+
+    @Test
+    public void testWriteTriggersScroll() {
+        tb.write("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+
+        List<String> all = tb.getEntireScreen();
+        assertTrue(all.size() > 5);
+    }
 }

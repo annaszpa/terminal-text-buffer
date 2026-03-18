@@ -62,11 +62,7 @@ public class CurrentTab {
     public void overwrite(String s) {
         List<Character> list = toCharList(s);
 
-        int[] newPos = rollingTab.overwriting(
-                list,
-                cursor.getCol(),
-                cursor.getRow()
-        );
+        int[] newPos = rollingTab.overwriting(list, cursor.getCol(), cursor.getRow());
 
         cursor.setCol(newPos[0]);
         cursor.setRow(newPos[1]);
@@ -75,11 +71,7 @@ public class CurrentTab {
     public void write(String s) {
         List<Character> list = toCharList(s);
 
-        int[] newPos = rollingTab.insertText(
-                list,
-                cursor.getCol(),
-                cursor.getRow()
-        );
+        int[] newPos = rollingTab.insertText(list, cursor.getCol(), cursor.getRow());
 
         cursor.setCol(newPos[0]);
         cursor.setRow(newPos[1]);
@@ -93,6 +85,7 @@ public class CurrentTab {
 
     public void insertEmptyLine() {
         rollingTab.insertEmptyLine();
+
     }
 
     public void clearTheScreen() {
@@ -101,8 +94,8 @@ public class CurrentTab {
         cursor.setRow(res[1]);
     }
 
-    public void getEntireScreen() {
-        rollingTab.getEntireScreen();
+    public List<String> getEntireScreen() {
+        return rollingTab.getEntireScreen();
     }
 
     public String getString(int row) {
@@ -115,5 +108,9 @@ public class CurrentTab {
             list.add(c);
         }
         return list;
+    }
+
+    public List<List<Character>> consumeRemovedLines() {
+        return rollingTab.consumeRemovedLines();
     }
 }
