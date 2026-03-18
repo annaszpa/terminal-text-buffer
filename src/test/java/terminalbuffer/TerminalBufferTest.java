@@ -4,11 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.Arrays;
-
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import element.Element;
 
 public class TerminalBufferTest {
 
@@ -19,10 +20,17 @@ public class TerminalBufferTest {
         tb = new TerminalBuffer(10, 5, 5);
     }
 
+    private List<Element> toElements(String s) {
+        return s.chars()
+                .mapToObj(c -> new Element((char) c))
+                .collect(Collectors.toList());
+    }
+
     @Test
     public void testCursorMovementWithinBounds() {
         tb.setCurrentCursorPosition(0, 0);
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+
+        assertThrows(IllegalArgumentException.class, () -> {
             tb.moveRight(3);
         });
     }
@@ -31,11 +39,11 @@ public class TerminalBufferTest {
     public void testCursorAndScreenOutput() {
         tb.setCurrentCursorPosition(0, 0);
 
-        tb.write("HELLO MOVE RIGHT, TESTING CURSOR MOVEMENT");
+        tb.write(toElements("HELLO MOVE RIGHT, TESTING CURSOR MOVEMENT"));
 
         int[] expectedCursor = {1, 4};
         int[] actualCursor = tb.getCurrentCursorPosition();
-        assertArrayEquals(expectedCursor, actualCursor, "Cursor position should match expected");
+        assertArrayEquals(expectedCursor, actualCursor);
 
         List<String> expectedScreen = Arrays.asList(
                 "HELLO MOVE",
@@ -46,17 +54,18 @@ public class TerminalBufferTest {
         );
 
         List<String> actualScreen = tb.getEntireScreen();
-        assertEquals(expectedScreen.size(), actualScreen.size(), "Number of lines should match");
+
+        assertEquals(expectedScreen.size(), actualScreen.size());
 
         for (int i = 0; i < expectedScreen.size(); i++) {
-            assertEquals(expectedScreen.get(i), actualScreen.get(i), "Line " + i + " should match expected");
+            assertEquals(expectedScreen.get(i), actualScreen.get(i));
         }
     }
 
     @Test
     public void testOverwriteText() {
         tb.setCurrentCursorPosition(0, 0);
-        tb.overwrite("HELLO");
+        tb.overwrite(toElements("HELLO"));
 
         String line = tb.getString(0);
         assertEquals("HELLO", line.trim());
@@ -64,9 +73,9 @@ public class TerminalBufferTest {
 
     @Test
     public void testOverwriteWrapsToNextLine() {
-        tb.write("ABC");
-        tb.setCurrentCursorPosition(2,0);
-        tb.overwrite("XYZ");
+        tb.write(toElements("ABC"));
+        tb.setCurrentCursorPosition(2, 0);
+        tb.overwrite(toElements("XYZ"));
 
         String str = tb.getString(0);
 
@@ -77,9 +86,10 @@ public class TerminalBufferTest {
     @Test
     public void testWriteInsertsCharacter() {
         tb.setCurrentCursorPosition(0, 0);
-        tb.write("HELLO");
+        tb.write(toElements("HELLO"));
+
         tb.setCurrentCursorPosition(2, 0);
-        tb.write("X");
+        tb.write(toElements("X"));
 
         String line = tb.getString(0);
 
@@ -94,7 +104,7 @@ public class TerminalBufferTest {
     @Test
     public void testWriteOverflowsLine() {
         tb.setCurrentCursorPosition(0, 0);
-        tb.write("ABCDEFGHIJK");
+        tb.write(toElements("ABCDEFGHIJK"));
 
         String line0 = tb.getString(0);
         String line1 = tb.getString(1);
@@ -105,7 +115,8 @@ public class TerminalBufferTest {
 
     @Test
     public void testFillLineEmpty() {
-        tb.currentTab.rollingTab.fillLine(0, 0, ' ');
+        tb.currentTab.rollingTab.fillLine(0, 0, new Element(' '));
+
         String line = tb.getString(2);
         assertEquals("", line.trim());
     }
@@ -113,6 +124,7 @@ public class TerminalBufferTest {
     @Test
     public void testFillLineWithCharacter() {
         tb.fillLine(0, 0, '*');
+
         String line = tb.getString(0);
         assertEquals("**********", line);
     }
@@ -120,23 +132,24 @@ public class TerminalBufferTest {
     @Test
     public void testGetEntireScreenOrder() {
         tb.setCurrentCursorPosition(0, 0);
-        tb.write("LINE1");
+        tb.write(toElements("LINE1"));
+
         tb.setCurrentCursorPosition(0, 1);
-        tb.write("LINE2");
+        tb.write(toElements("LINE2"));
 
         List<String> screen = tb.getEntireScreen();
+
         assertEquals("LINE1", screen.get(0).trim());
         assertEquals("LINE2", screen.get(1).trim());
     }
 
     @Test
     public void testSingleLineGoesToArchive() {
-        tb.write("LINE1");
-        tb.insertEmptyLine();
-        tb.insertEmptyLine();
-        tb.insertEmptyLine();
-        tb.insertEmptyLine();
-        tb.insertEmptyLine();
+        tb.write(toElements("LINE1"));
+
+        for (int i = 0; i < 5; i++) {
+            tb.insertEmptyLine();
+        }
 
         List<String> all = tb.getEntireScreen();
 
@@ -146,7 +159,7 @@ public class TerminalBufferTest {
     @Test
     public void testMultipleLinesGoToArchive() {
         for (int i = 0; i < 5; i++) {
-            tb.write("L" + i);
+            tb.write(toElements("L" + i));
             tb.insertEmptyLine();
         }
 
@@ -159,10 +172,11 @@ public class TerminalBufferTest {
     @Test
     public void testArchiveOrder() {
         for (int i = 0; i < 7; i++) {
-            tb.write("LINE" + i);
+            tb.write(toElements("LINE" + i));
         }
 
         List<String> all = tb.getEntireScreen();
+
         assertTrue(all.get(0).contains("LINE0"));
         assertTrue(all.get(0).contains("LINE1"));
     }
@@ -172,7 +186,7 @@ public class TerminalBufferTest {
         tb = new TerminalBuffer(10, 3, 3);
 
         for (int i = 0; i < 10; i++) {
-            tb.write("L" + i);
+            tb.write(toElements("L" + i));
             tb.insertEmptyLine();
         }
 
@@ -184,7 +198,7 @@ public class TerminalBufferTest {
     @Test
     public void testScreenAndArchiveTogether() {
         for (int i = 0; i < 10; i++) {
-            tb.write("LINE" + i);
+            tb.write(toElements("LINE" + i));
             tb.insertEmptyLine();
         }
 
@@ -195,9 +209,72 @@ public class TerminalBufferTest {
 
     @Test
     public void testWriteTriggersScroll() {
-        tb.write("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        tb.write(toElements(
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"));
 
         List<String> all = tb.getEntireScreen();
+
         assertTrue(all.size() > 5);
+    }
+    @Test
+    public void testElementConstructorWithChar() {
+        Element e = new Element('A');
+
+        assertEquals('A', e.character);
+        assertEquals(0, e.foregroundColour);
+        assertEquals(0, e.backgroundColour);
+        assertEquals(0, e.flags);
+    }
+    @Test
+    public void testElementFullConstructor() {
+        Element e = new Element('X', 1, 2, 3);
+
+        assertEquals('X', e.character);
+        assertEquals(1, e.foregroundColour);
+        assertEquals(2, e.backgroundColour);
+        assertEquals(3, e.flags);
+    }
+
+    @Test
+    public void testWritePreservesElementProperties() {
+        TerminalBuffer tb = new TerminalBuffer(10, 2, 2);
+
+        Element e = new Element('A', 5, 6, 7);
+
+        tb.write(Arrays.asList(e));
+
+        Element stored = tb.currentTab.getElement(0, 0);
+
+        assertEquals('A', stored.character);
+        assertEquals(5, stored.foregroundColour);
+        assertEquals(6, stored.backgroundColour);
+        assertEquals(7, stored.flags);
+    }
+
+    @Test
+    public void testOverwriteDoesNotShiftElements() {
+        TerminalBuffer tb = new TerminalBuffer(10, 2, 2);
+
+        tb.write(tb.currentTab.wrapString("ABCDE"));
+
+        tb.setCurrentCursorPosition(2, 0);
+        tb.overwrite(Arrays.asList(new Element('X')));
+
+        String line = tb.getString(0);
+
+        assertEquals("ABXDE", line);
+    }
+    @Test
+    public void testWriteShiftsElements() {
+        TerminalBuffer tb = new TerminalBuffer(10, 2, 2);
+
+        tb.write(tb.currentTab.wrapString("ABCDE"));
+
+        tb.setCurrentCursorPosition(2, 0);
+        tb.write(Arrays.asList(new Element('X')));
+
+        String line = tb.getString(0);
+
+        assertEquals("ABXCDE", line);
     }
 }

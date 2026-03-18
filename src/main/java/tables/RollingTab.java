@@ -1,5 +1,6 @@
 package tables;
 
+import element.Element;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +14,10 @@ public class RollingTab {
 
     boolean isFull;
 
-    List<Character>[] lines;
-    List<List<Character>> removedLines = new ArrayList<>();
+    List<Element>[] lines;
+    List<List<Element>> removedLines = new ArrayList<>();
 
     public RollingTab(int width, int height) {
-
         this.width = width;
         this.height = height;
 
@@ -33,12 +33,10 @@ public class RollingTab {
     }
 
     boolean isOutOfBounds(int x, int y) {
-
         if (x < 0 || x >= width) return true;
         if (y < 0 || y >= height) return true;
 
         int idx = (y + startLine) % height;
-
         if (x > lines[idx].size()) return true;
 
         return false;
@@ -55,7 +53,7 @@ public class RollingTab {
     }
 
     public void insertEmptyLine() {
-        List<Character> removed = null;
+        List<Element> removed = null;
 
         if (isFull) {
             removed = new ArrayList<>(lines[startLine]);
@@ -71,65 +69,57 @@ public class RollingTab {
         }
     }
 
-    public List<List<Character>> consumeRemovedLines() {
-        List<List<Character>> result = new ArrayList<>(removedLines);
+    public List<List<Element>> consumeRemovedLines() {
+        List<List<Element>> result = new ArrayList<>(removedLines);
         removedLines.clear();
         return result;
     }
 
-    public char getCharacter(int x, int y) {
-
+    public Element getElement(int x, int y) {
         if (isOutOfBounds(x, y)) {
-            return '\0';
+            return null;
         }
-
         return lines[(y + startLine) % height].get(x);
     }
+
     public int getHeight() {
         return height;
     }
 
     public String getString(int x) {
-
         if (x < 0 || x >= height) {
             return "";
         }
 
         StringBuilder sb = new StringBuilder();
-
-        for (Character c : lines[(x + startLine) % height]) {
-            sb.append(c == null ? ' ' : c);
+        for (Element e : lines[(x + startLine) % height]) {
+            sb.append(e == null ? ' ' : e.character);
         }
 
         return sb.toString();
     }
 
     public List<String> getEntireScreen() {
-
         List<String> result = new ArrayList<>();
-
         for (int x = 0; x < height; x++) {
             result.add(getString(x));
         }
-
         return result;
     }
 
-    public int[] overwriting(List<Character> text, int x, int y) {
+    public int[] overwriting(List<Element> text, int x, int y) {
         int col = x;
         int row = y;
 
-        for (Character ch : text) {
-
+        for (Element e : text) {
             int idx = (row + startLine) % height;
-            List<Character> line = lines[idx];
+            List<Element> line = lines[idx];
 
             while (line.size() <= col) {
                 line.add(null);
             }
 
-            line.set(col, ch);
-
+            line.set(col, e);
             col++;
 
             if (col >= width) {
@@ -146,42 +136,38 @@ public class RollingTab {
         return new int[]{col, row};
     }
 
-    public int[] fillLine(int x, int y, char c) {
-        List<Character> line = new ArrayList<>();
+    public int[] fillLine(int x, int y, Element e) {
+        List<Element> line = new ArrayList<>();
 
         for (int i = x; i < width; i++) {
-            line.add(c);
+            line.add(new Element(e.character, e.foregroundColour, e.backgroundColour, e.flags));
         }
 
         lines[(y + startLine) % height] = line;
         return new int[]{width - 1, y};
     }
 
-    int[] insertText(List<Character> text, int x, int y) {
-
+    int[] insertText(List<Element> text, int x, int y) {
         int row = y;
         int col = x;
 
-        for (Character c : text) {
-
+        for (Element e : text) {
             if (row >= height) {
                 insertEmptyLine();
                 row = height - 1;
             }
 
             int idx = (row + startLine) % height;
-            List<Character> line = lines[idx];
+            List<Element> line = lines[idx];
 
             while (line.size() < col) {
                 line.add(null);
             }
 
-            line.add(col, c);
+            line.add(col, e);
 
             if (line.size() > width) {
-
-                Character overflow = line.remove(width);
-
+                Element overflow = line.remove(width);
                 row++;
                 col = 0;
 
@@ -192,7 +178,6 @@ public class RollingTab {
 
                 int nextIdx = (row + startLine) % height;
                 lines[nextIdx].add(0, overflow);
-
                 continue;
             }
 

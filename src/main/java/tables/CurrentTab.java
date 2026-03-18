@@ -3,6 +3,7 @@ package tables;
 import java.util.ArrayList;
 import java.util.List;
 import element.Cursor;
+import element.Element;
 
 public class CurrentTab {
 
@@ -59,33 +60,34 @@ public class CurrentTab {
         cursor.setRow(row);
     }
 
-    public void overwrite(String s) {
-        List<Character> list = toCharList(s);
-
-        int[] newPos = rollingTab.overwriting(list, cursor.getCol(), cursor.getRow());
-
+    public void overwrite(List<Element> elements) {
+        int[] newPos = rollingTab.overwriting(elements, cursor.getCol(), cursor.getRow());
         cursor.setCol(newPos[0]);
         cursor.setRow(newPos[1]);
     }
 
-    public void write(String s) {
-        List<Character> list = toCharList(s);
-
-        int[] newPos = rollingTab.insertText(list, cursor.getCol(), cursor.getRow());
-
+    public void write(List<Element> elements) {
+        int[] newPos = rollingTab.insertText(elements, cursor.getCol(), cursor.getRow());
         cursor.setCol(newPos[0]);
         cursor.setRow(newPos[1]);
+    }
+
+    public List<Element> wrapString(String s) {
+        List<Element> list = new ArrayList<>();
+        for (char c : s.toCharArray()) {
+            list.add(new Element(c));
+        }
+        return list;
     }
 
     public void fillWithChar(char c) {
-        int[] result = rollingTab.fillLine(cursor.getCol(), cursor.getRow(), c);
+        int[] result = rollingTab.fillLine(cursor.getCol(), cursor.getRow(), new Element(c));
         cursor.setCol(result[0]);
         cursor.setRow(result[1]);
     }
 
     public void insertEmptyLine() {
         rollingTab.insertEmptyLine();
-
     }
 
     public void clearTheScreen() {
@@ -102,15 +104,19 @@ public class CurrentTab {
         return rollingTab.getString(row);
     }
 
-    private List<Character> toCharList(String s) {
-        List<Character> list = new ArrayList<>();
+    private List<Element> toElementList(String s) {
+        List<Element> list = new ArrayList<>();
         for (char c : s.toCharArray()) {
-            list.add(c);
+            list.add(new Element(c));
         }
         return list;
     }
 
-    public List<List<Character>> consumeRemovedLines() {
+    public List<List<Element>> consumeRemovedLines() {
         return rollingTab.consumeRemovedLines();
+    }
+
+    public Element getElement(int x, int y) {
+        return rollingTab.getElement(x, y);
     }
 }
