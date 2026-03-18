@@ -1,11 +1,12 @@
 package tables;
 
+import element.Element;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ArchiveTab {
 
-    private ArrayList[] list;
+    private ArrayList<Element>[] list;
     private int maxLines;
 
     private int start = 0;
@@ -16,8 +17,7 @@ public class ArchiveTab {
         this.list = new ArrayList[maxLines];
     }
 
-    public void addLine(List<Character> line) {
-
+    public void addLine(List<Element> line) {
         int index = (start + size) % maxLines;
 
         if (size == maxLines) {
@@ -29,7 +29,7 @@ public class ArchiveTab {
         }
     }
 
-    public List<Character> getLine(int i) {
+    public List<Element> getLine(int i) {
         if (i < 0 || i >= size) {
             return new ArrayList<>();
         }
@@ -39,11 +39,11 @@ public class ArchiveTab {
     }
 
     public String getLineAsString(int i) {
-        List<Character> line = getLine(i);
+        List<Element> line = getLine(i);
 
         StringBuilder sb = new StringBuilder();
-        for (Character c : line) {
-            sb.append(c == null ? ' ' : c);
+        for (Element e : line) {
+            sb.append(e == null ? ' ' : e.character);
         }
 
         return sb.toString();

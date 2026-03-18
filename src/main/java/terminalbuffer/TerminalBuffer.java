@@ -1,5 +1,6 @@
 package terminalbuffer;
 
+import element.Element;
 import tables.ArchiveTab;
 import tables.CurrentTab;
 
@@ -17,9 +18,9 @@ public class TerminalBuffer {
     }
 
     private void captureScroll() {
-        List<List<Character>> removedLines = currentTab.consumeRemovedLines();
+        List<List<Element>> removedLines = currentTab.consumeRemovedLines();
 
-        for (List<Character> line : removedLines) {
+        for (List<Element> line : removedLines) {
             archiveTab.addLine(line);
         }
     }
@@ -48,13 +49,13 @@ public class TerminalBuffer {
         this.currentTab.setCurrentCursorPosition(x, y);
     }
 
-    public void overwrite(String text) {
-        this.currentTab.overwrite(text);
+    public void overwrite(List<Element> elements) {
+        this.currentTab.overwrite(elements);
         captureScroll();
     }
 
-    public void write(String text) {
-        this.currentTab.write(text);
+    public void write(List<Element> elements) {
+        this.currentTab.write(elements);
         captureScroll();
     }
 
@@ -95,7 +96,11 @@ public class TerminalBuffer {
         return this.currentTab.getString(x);
     }
 
-    public void fillLine(int i, int i1, char c) {
+    public void fillLine(int x, int y, char c) {
         this.currentTab.fillWithChar(c);
+    }
+
+    public List<Element> getArchiveLine(int i) {
+        return archiveTab.getLine(i);
     }
 }
